@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>版下 — 版面プレビュー</title>
+<style>
+:root{
+  --sumi:#14171C;
+  --aitetsu:#232B36;
+  --aitetsu-2:#2E3846;
+  --aitetsu-3:#3C4859;
+  --daishi:#B9C0C8;
+  --paper:#FCFBF8;
+  --nonphoto:#3F93BC;
+  --nonphoto-pale:#B9DCEA;
+  --shu:#A8322A;
+  --usu:#6B7684;
+  --usu-light:#9AA5B1;
+  --mincho:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","MS PMincho",serif;
+  --gothic:"Hiragino Sans","Yu Gothic","YuGothic","Noto Sans JP",Meiryo,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{background:var(--daishi);color:var(--sumi);font-family:var(--gothic);font-size:14px;display:flex;flex-direction:column;overflow:hidden;}
+
+/* file:// で開かれたときの警告 */
+#alarm{
+  display:none;background:var(--shu);color:#fff;
+  padding:9px 18px;font-size:13px;line-height:1.6;flex-shrink:0;
+}
+#alarm code{font-family:var(--mono);background:rgba(0,0,0,.25);padding:1px 5px;border-radius:2px;}
+#alarm.on{display:block;}
+
+header{background:var(--aitetsu);color:var(--daishi);border-bottom:1px solid #0C0F13;display:flex;align-items:stretch;flex-wrap:wrap;flex-shrink:0;}
+.brand{display:flex;align-items:baseline;gap:.6em;padding:11px 18px;border-right:1px solid var(--aitetsu-3);}
+.brand b{font-family:var(--mincho);font-size:18px;font-weight:600;letter-spacing:.28em;color:var(--paper);}
+.brand span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--usu-light);}
+.spec{display:flex;flex-direction:column;gap:3px;padding:8px 13px;border-right:1px solid var(--aitetsu-2);justify-content:center;}
+.spec label{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--usu-light);text-transform:uppercase;}
+.spec select,.spec input[type=number]{background:var(--aitetsu-2);border:1px solid var(--aitetsu-3);color:var(--paper);font-family:var(--mono);font-size:13px;padding:3px 6px;border-radius:2px;}
+.spec input[type=number]{width:52px;}
+.pair{display:flex;gap:5px;align-items:center;}
+.pair em{font-style:normal;color:var(--usu);font-family:var(--mono);font-size:11px;}
+.seg{display:flex;border:1px solid var(--aitetsu-3);border-radius:2px;overflow:hidden;}
+.seg button{background:var(--aitetsu-2);border:0;color:var(--usu-light);font-family:var(--gothic);font-size:12px;padding:4px 11px;cursor:pointer;}
+.seg button[aria-pressed=true]{background:var(--nonphoto);color:#fff;}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--nonphoto);outline-offset:1px;}
+
+main{flex:1 1 auto;display:flex;min-height:0;}
+.stage{display:flex;flex-direction:column;min-width:0;min-height:0;}
+.draft{flex:0 0 40%;background:var(--aitetsu);position:relative;}
+
+.bar{display:flex;align-items:center;gap:3px;flex-wrap:wrap;padding:7px 10px;border-bottom:1px solid var(--aitetsu-2);flex-shrink:0;}
+.bar button{background:transparent;border:1px solid transparent;border-radius:2px;color:var(--daishi);font-family:var(--gothic);font-size:12px;padding:5px 9px;cursor:pointer;line-height:1.2;}
+.bar button:hover{background:var(--aitetsu-2);border-color:var(--aitetsu-3);}
+.bar button:active{background:var(--nonphoto);color:#fff;}
+.bar button .k{font-family:var(--mono);font-size:9px;color:var(--usu);margin-left:4px;}
+.bar .sep{width:1px;align-self:stretch;background:var(--aitetsu-2);margin:0 5px;}
+.bar .menu{position:relative;}
+.bar .menu>summary{
+  list-style:none;cursor:pointer;border:1px solid var(--aitetsu-3);border-radius:2px;
+  color:var(--daishi);font-size:12px;padding:5px 10px;line-height:1.2;
+}
+.bar .menu>summary::-webkit-details-marker{display:none;}
+.bar .menu[open]>summary{background:var(--nonphoto);border-color:var(--nonphoto);color:#fff;}
+.bar .menu .pop{
+  position:absolute;top:calc(100% + 5px);left:0;z-index:20;
+  background:#1A1E25;border:1px solid var(--aitetsu-3);border-radius:3px;
+  min-width:230px;padding:5px;box-shadow:0 8px 24px rgba(0,0,0,.45);
+}
+.bar .menu .pop button{display:block;width:100%;text-align:left;padding:7px 10px;border-radius:2px;}
+.bar .menu .pop button small{display:block;color:var(--usu);font-size:10px;margin-top:2px;font-family:var(--mono);}
+.bar .menu .pop hr{border:0;border-top:1px solid var(--aitetsu-2);margin:5px 2px;}
+.bar .state{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--usu);white-space:nowrap;padding-right:2px;}
+.bar .state.busy{color:var(--nonphoto-pale);}
+.bar .state.bad{color:#E88C84;}
+
+#src{flex:1 1 auto;width:100%;background:var(--aitetsu);color:#DCE3EA;border:0;resize:none;padding:14px 18px 44px;font-family:var(--mono);font-size:14px;line-height:2;}
+#src::selection{background:var(--nonphoto);color:#fff;}
+#src.dragover{background:var(--aitetsu-2);box-shadow:inset 0 0 0 2px var(--nonphoto);}
+
+.proof{flex:1 1 60%;background:var(--daishi);border-left:1px solid #9BA4AE;}
+.proof-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:7px 14px;background:#A9B2BB;border-bottom:1px solid #97A0AA;flex-shrink:0;font-family:var(--mono);font-size:11px;color:var(--aitetsu);}
+.proof-head .lbl{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#4B545F;}
+.proof-head b{font-weight:600;}
+.proof-head .warn{color:var(--shu);font-weight:600;}
+.proof-head button{background:transparent;border:1px solid #8A939D;border-radius:2px;color:#3A424D;font-size:11px;padding:2px 8px;cursor:pointer;font-family:var(--gothic);}
+.proof-head button:hover{background:#9BA4AE;}
+.proof-head .zoom{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.proof-head input[type=range]{width:92px;accent-color:var(--aitetsu);}
+
+.paper-scroll{flex:1 1 auto;overflow:auto;padding:26px;}
+.sheet{display:inline-block;position:relative;background-repeat:repeat-x;background-origin:border-box;filter:drop-shadow(0 6px 18px rgba(20,23,28,.28));font-family:var(--mincho);color:var(--sumi);}
+.flow{position:relative;}
+.flow p{margin:0;}
+.marks{position:absolute;inset:0;pointer-events:none;}
+.marks .frame{position:absolute;border:1px dashed rgba(63,147,188,.5);}
+.marks .nombre{position:absolute;font-family:var(--mono);font-size:10px;color:#5A6470;text-align:center;}
+
+.sheet .gothic{font-family:var(--gothic);font-weight:600;}
+.sheet .boten{text-emphasis:filled sesame currentColor;-webkit-text-emphasis:filled sesame currentColor;}
+.sheet ruby rt{font-size:.5em;letter-spacing:0;font-weight:400;}
+.sheet .pagebreak{display:block;height:0;}
+
+.sheet figure{margin:1.4em 0;break-inside:avoid;page-break-inside:avoid;text-align:center;}
+.sheet figure img{max-width:100%;height:auto;display:block;margin:0 auto;background:#EFEDE8;}
+.sheet figure .miss{display:block;padding:2.2em 1em;border:1px dashed var(--shu);color:var(--shu);font-family:var(--mono);font-size:.8em;}
+.sheet figcaption{margin-top:.5em;font-family:var(--gothic);font-size:.82em;color:#3A424D;text-align:center;line-height:1.5;}
+.sheet figcaption .dpi{font-family:var(--mono);font-size:.86em;color:var(--usu);margin-left:.6em;}
+.sheet figcaption .dpi.low{color:var(--shu);font-weight:700;}
+
+.sheet .tbl{margin:1.4em 0;break-inside:avoid;page-break-inside:avoid;}
+.sheet .tbl .tcap{font-family:var(--gothic);font-size:.82em;color:#3A424D;margin-bottom:.4em;line-height:1.5;}
+.sheet table{border-collapse:collapse;width:100%;font-family:var(--gothic);font-size:.84em;line-height:1.55;border-top:1.6px solid var(--sumi);border-bottom:1.6px solid var(--sumi);}
+.sheet thead th{border-bottom:1px solid var(--sumi);font-weight:700;}
+.sheet th,.sheet td{padding:.36em .7em;text-align:left;vertical-align:top;}
+.sheet td.c,.sheet th.c{text-align:center;}
+.sheet td.r,.sheet th.r{text-align:right;}
+.sheet tbody tr+tr td{border-top:1px solid #DDD9D0;}
+
+.h .h1{font-family:var(--gothic);font-size:1.5em;font-weight:700;letter-spacing:.04em;margin:1.6em 0 .9em;padding-left:.55em;border-left:4px solid var(--nonphoto);break-after:avoid;}
+.h .h2{font-family:var(--gothic);font-size:1.2em;font-weight:700;letter-spacing:.03em;margin:1.5em 0 .5em;padding-bottom:.25em;border-bottom:1px solid #D2CEC4;break-after:avoid;}
+.h .h3{font-family:var(--gothic);font-size:1.05em;font-weight:700;margin:1.3em 0 .35em;break-after:avoid;}
+.h .h4{font-family:var(--gothic);font-size:.95em;font-weight:700;color:#2E3846;margin:1.1em 0 .25em;break-after:avoid;}
+.h .h5{font-family:var(--gothic);font-size:.9em;font-weight:700;color:#4B545F;margin:1em 0 .2em;break-after:avoid;}
+.h .h6{font-family:var(--gothic);font-size:.86em;font-weight:700;color:#6B7684;letter-spacing:.06em;margin:1em 0 .2em;break-after:avoid;}
+.h .quote{margin:1em 0;padding:.15em 0 .15em 1em;border-left:2px solid #D2CEC4;color:#3A424D;}
+
+.v .h1{font-size:1.45em;font-weight:600;letter-spacing:.35em;margin:0 3.2em 0 1.6em;border-right:2px solid var(--nonphoto);padding-right:.8em;}
+.v .h2{font-size:1.16em;font-weight:600;letter-spacing:.18em;margin:0 1.8em 0 .9em;}
+.v .h3{font-size:1.05em;font-weight:600;letter-spacing:.12em;margin:0 1.4em 0 .7em;}
+.v .h4{font-size:1em;font-weight:600;letter-spacing:.08em;color:#2E3846;margin:0 1.2em 0 .6em;}
+.v .h5{font-size:.96em;font-weight:600;color:#4B545F;margin:0 1em 0 .5em;}
+.v .h6{font-size:.92em;font-weight:600;color:#6B7684;margin:0 1em 0 .5em;}
+.v .quote{margin:1.6em 0;padding:1em 0;color:#3A424D;border-top:1px solid #D8D4CB;border-bottom:1px solid #D8D4CB;}
+.v figure,.v .tbl{writing-mode:horizontal-tb;inline-size:100%;margin:0 1.4em;}
+
+.cheat{position:absolute;left:12px;bottom:12px;z-index:5;background:rgba(20,23,28,.94);border:1px solid var(--aitetsu-3);border-radius:3px;max-width:340px;}
+.cheat summary{cursor:pointer;list-style:none;padding:7px 12px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--usu-light);}
+.cheat summary::-webkit-details-marker{display:none;}
+.cheat[open] summary{border-bottom:1px solid var(--aitetsu-2);color:var(--nonphoto-pale);}
+.cheat dl{margin:0;padding:10px 12px 12px;display:grid;grid-template-columns:auto 1fr;gap:5px 12px;align-items:baseline;}
+.cheat dt{font-family:var(--mono);font-size:11px;color:var(--nonphoto-pale);white-space:nowrap;}
+.cheat dd{margin:0;font-size:11px;color:var(--daishi);}
+
+@media (max-width:900px){
+  main{flex-direction:column;}
+  .draft{flex:1 1 42%;}
+  .proof{flex:1 1 58%;border-left:0;border-top:1px solid #9BA4AE;}
+  .cheat{display:none;}
+  .bar button .k{display:none;}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+
+<div id="alarm">
+  <b>file:// で開かれています。</b>
+  この状態では IndexedDB が使えず、原稿は保存されません。
+  ファイルのあるディレクトリで <code>python3 -m http.server 8000</code> を実行し、
+  <code>http://localhost:8000/</code> から開き直してください。
+</div>
+
+<header>
+  <div class="brand"><b>版下</b><span>preview</span></div>
+  <div class="spec">
+    <label>組み方向</label>
+    <div class="seg" id="dir">
+      <button type="button" data-dir="h" aria-pressed="true">横組み</button>
+      <button type="button" data-dir="v" aria-pressed="false">縦組み</button>
+    </div>
+  </div>
+  <div class="spec">
+    <label for="size">判型</label>
+    <select id="size">
+      <option value="182,257,22,24" selected>B5　182×257</option>
+      <option value="148,210,20,18">A5　148×210</option>
+      <option value="128,182,17,15">B6　128×182</option>
+      <option value="105,148,15,13">文庫　105×148</option>
+      <option value="210,297,25,25">A4　210×297</option>
+    </select>
+  </div>
+  <div class="spec">
+    <label>余白 天地／左右 mm</label>
+    <div class="pair"><input id="mv" type="number" min="5" max="60" value="22"><em>×</em><input id="mh" type="number" min="5" max="60" value="24"></div>
+  </div>
+  <div class="spec">
+    <label>文字 pt ／ 行送り %</label>
+    <div class="pair"><input id="pt" type="number" min="6" max="20" step="0.5" value="9.5"><em>×</em><input id="lh" type="number" min="110" max="250" step="5" value="170"></div>
+  </div>
+  <div class="spec">
+    <label>書体・字下げ・採番</label>
+    <div class="pair">
+      <select id="face"><option value="var(--mincho)">明朝</option><option value="var(--gothic)">ゴシック</option></select>
+      <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="indent" checked style="accent-color:var(--nonphoto);margin:0;">字下げ</label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="autonum" checked style="accent-color:var(--nonphoto);margin:0;">図表番号</label>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="stage draft">
+    <div class="bar" id="bar">
+      <button type="button" data-prefix="# ">章題</button>
+      <button type="button" data-prefix="## ">節</button>
+      <button type="button" data-prefix="### ">項</button>
+      <button type="button" data-prefix="&gt; ">引用</button>
+      <button type="button" data-block="---">改頁</button>
+      <span class="sep"></span>
+      <button type="button" id="btn-img">画像を置く</button>
+      <button type="button" id="btn-tbl">表を置く</button>
+      <span class="sep"></span>
+      <button type="button" data-wrap="|‖《‖》" data-back="1">ルビ<span class="k">^R</span></button>
+      <button type="button" data-wrap="《《‖》》">傍点<span class="k">^E</span></button>
+      <button type="button" data-wrap="**‖**">強調<span class="k">^B</span></button>
+      <span class="sep"></span>
+      <button type="button" data-wrap="「‖」">「」</button>
+      <button type="button" data-wrap="『‖』">『』</button>
+      <button type="button" data-insert="……">……</button>
+      <button type="button" data-insert="——">——</button>
+      <span class="sep"></span>
+      <details class="menu" id="menu">
+        <summary>書き出し</summary>
+        <div class="pop">
+          <button type="button" id="ex-save">上書き保存<small>Ctrl+S / 保存先を一度選ぶ</small></button>
+          <button type="button" id="ex-saveas">名前を付けて保存<small>保存先を選び直す</small></button>
+          <hr>
+          <button type="button" id="ex-md">.md をダウンロード<small>原稿そのまま</small></button>
+          <button type="button" id="ex-txt">.txt をダウンロード<small>記法を除いた素のテキスト</small></button>
+          <hr>
+          <button type="button" id="ex-dir">図版ごとフォルダへ<small>参照を ./img/ に書き換える</small></button>
+        </div>
+      </details>
+      <span class="state" id="state"></span>
+    </div>
+    <textarea id="src" spellcheck="false" aria-label="原稿"></textarea>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+    <details class="cheat">
+      <summary>記法早見</summary>
+      <dl>
+        <dt># 〜 ######</dt><dd>見出し。6段まで使える</dd>
+        <dt>---</dt><dd>そこで改頁する</dd>
+        <dt>![説明](fig1)</dt><dd>画像。貼り付け・ドロップで取り込む</dd>
+        <dt>![説明](fig1){60%}</dt><dd>版面幅に対する表示幅を指定</dd>
+        <dt>| A | B |</dt><dd>表。2行目を <b>| --- | --- |</b> にする</dd>
+        <dt>[表: 説明]</dt><dd>表の直前に置くと見出しになる</dd>
+        <dt>|漢字《かんじ》</dt><dd>ルビ。縦線で親文字を指定</dd>
+        <dt>《《ここ》》</dt><dd>傍点</dd>
+        <dt>**ここ**</dt><dd>ゴシック体で強調</dd>
+        <dt>&gt; 引用</dt><dd>引用ブロック</dd>
+      </dl>
+    </details>
+  </section>
+
+  <section class="stage proof">
+    <div class="proof-head">
+      <span class="lbl">版面</span><span id="ro-men"></span>
+      <span class="lbl">総頁</span><span id="ro-pg"></span>
+      <span class="lbl">文字</span><span id="ro-ct"></span>
+      <span class="lbl">画像</span><span id="ro-img"></span>
+      <button type="button" id="btn-gc">未使用を整理</button>
+      <span class="lbl">占有</span><span id="ro-quota">—</span>
+      <span class="zoom">
+        <span class="lbl">表示</span>
+        <input id="zoom" type="range" min="40" max="140" step="5" value="85">
+        <span id="ro-zoom" style="width:3.2em;">85%</span>
+      </span>
+    </div>
+    <div class="paper-scroll" id="scroll">
+      <div class="sheet" id="sheet"><div class="flow" id="flow"></div><div class="marks" id="marks"></div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const src=$("src"), sheet=$("sheet"), flow=$("flow"), marks=$("marks"), stateEl=$("state");
+
+const MM=96/25.4, PT=25.4/72, GUT=14, DPI_MIN=300;
+
+const IMAGES = new Map();   // fig1 → {blob, url, w, h, bytes}
+let imgSeq = 0;
+let dir = "h";
+let booting = true;
+
+/* ══════════════════════════════════════════════
+   保存層 — IndexedDB
+   単一のオブジェクトストアにキーを外から与える方式。
+   構造化複製が効くので Blob も JSON も同じ扱いで置ける。
+   ══════════════════════════════════════════════ */
+const store = (function(){
+  const DB="hanshita", STORE="kv", VER=1;
+  let db=null, ready=false;
+
+  const open = () => new Promise((res,rej)=>{
+    const req = indexedDB.open(DB, VER);
+    req.onupgradeneeded = () => {
+      const d = req.result;
+      if(!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE);
+    };
+    req.onsuccess = () => res(req.result);
+    req.onerror   = () => rej(req.error);
+    req.onblocked = () => rej(new Error("blocked"));
+  });
+
+  // request ではなくトランザクションの完了を待つ。
+  // onsuccess の時点ではまだディスクに確定していない
+  const tx = (mode, fn) => new Promise((res,rej)=>{
+    let t;
+    try{ t = db.transaction(STORE, mode); }catch(e){ return rej(e); }
+    const r = fn(t.objectStore(STORE));
+    t.oncomplete = () => res(r ? r.result : undefined);
+    t.onabort = t.onerror = () => rej(t.error || new Error("aborted"));
+  });
+
+  return {
+    async init(){
+      if(!("indexedDB" in window)) return false;
+      try{ db = await open(); ready = true; }catch(e){ ready = false; }
+      if(ready && navigator.storage && navigator.storage.persist){
+        try{ await navigator.storage.persist(); }catch(e){}
+      }
+      return ready;
+    },
+    ok(){ return ready; },
+    async get(k){
+      if(!ready) return null;
+      try{ const v = await tx("readonly", s=>s.get(k)); return v===undefined ? null : v; }
+      catch(e){ return null; }
+    },
+    async set(k,v){ return tx("readwrite", s=>s.put(v,k)); },
+    async del(k){ try{ await tx("readwrite", s=>s.delete(k)); }catch(e){} },
+    async list(prefix){
+      if(!ready) return [];
+      try{
+        const range = IDBKeyRange.bound(prefix, prefix+"\uffff");
+        return (await tx("readonly", s=>s.getAllKeys(range))) || [];
+      }catch(e){ return []; }
+    },
+    async usage(){
+      if(!(navigator.storage && navigator.storage.estimate)) return null;
+      try{ return await navigator.storage.estimate(); }catch(e){ return null; }
+    }
+  };
+})();
+
+const K_DOC="hanshita:doc";
+const K_IMG = k => "hanshita:img:"+k;
+
+function setState(text, cls){
+  stateEl.textContent = text;
+  stateEl.className = "state" + (cls ? " "+cls : "");
+}
+
+function conf(){
+  return {
+    dir, size:$("size").value, mv:$("mv").value, mh:$("mh").value,
+    pt:$("pt").value, lh:$("lh").value, face:$("face").selectedIndex,
+    indent:$("indent").checked, autonum:$("autonum").checked, zoom:$("zoom").value
+  };
+}
+function applyConf(c){
+  if(!c) return;
+  if(c.size) $("size").value=c.size;
+  ["mv","mh","pt","lh","zoom"].forEach(k=>{ if(c[k]!=null) $(k).value=c[k]; });
+  if(c.face!=null) $("face").selectedIndex=c.face;
+  if(c.indent!=null) $("indent").checked=c.indent;
+  if(c.autonum!=null) $("autonum").checked=c.autonum;
+  if(c.dir){ dir=c.dir; [...$("dir").children].forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.dir===dir))); }
+}
+
+let docTimer=null;
+function saveDoc(){
+  if(booting || !store.ok()) return;
+  clearTimeout(docTimer);
+  setState("保存中","busy");
+  docTimer = setTimeout(async ()=>{
+    try{
+      await store.set(K_DOC, {text:src.value, conf:conf(), seq:imgSeq, at:Date.now()});
+      setState("保存済");
+    }catch(e){ setState("本文を保存できません","bad"); }
+  }, 600);
+}
+
+async function saveImage(key, rec){
+  if(!store.ok()){ rec.volatile=true; return false; }
+  try{
+    // Blob をそのまま入れる。base64 化しないので実ファイル大のまま収まる
+    await store.set(K_IMG(key), {blob:rec.blob, w:rec.w, h:rec.h, b:rec.bytes, name:rec.name});
+    return true;
+  }catch(e){ rec.volatile=true; return false; }
+}
+
+async function showQuota(){
+  const est = await store.usage();
+  if(!est){ $("ro-quota").textContent="—"; return; }
+  const mb = v => (v/1048576).toFixed(1);
+  $("ro-quota").innerHTML = `<b>${mb(est.usage)}</b>MB<span style="color:#5A6470"> / ${(est.quota/1073741824).toFixed(1)}GB</span>`;
+}
+
+async function restore(){
+  if(location.protocol === "file:") $("alarm").classList.add("on");
+
+  const ready = await store.init();
+  if(!ready){
+    src.value = SAMPLE; booting=false;
+    setState("保存できない環境です","bad");
+    update(); return;
+  }
+
+  setState("読み込み中","busy");
+  const doc = await store.get(K_DOC);
+  if(doc){
+    applyConf(doc.conf);
+    src.value = doc.text || "";
+    imgSeq = doc.seq || 0;
+  }else{
+    src.value = SAMPLE;
+  }
+
+  // 文字を先に描き、画像はあとから差し込む
+  update();
+
+  const keys = await store.list("hanshita:img:");
+  let n=0;
+  for(const full of keys){
+    const key = full.slice("hanshita:img:".length);
+    const o = await store.get(full);
+    if(!o || !o.blob) continue;
+    IMAGES.set(key, {
+      blob:o.blob, url:URL.createObjectURL(o.blob),
+      w:o.w, h:o.h, bytes:o.b, name:o.name
+    });
+    const m = key.match(/^fig(\d+)$/);
+    if(m) imgSeq = Math.max(imgSeq, +m[1]);
+    n++;
+    setState(`画像を読み込み中 ${n}/${keys.length}`,"busy");
+  }
+
+  // 前回の保存先を思い出す。権限の確認は Ctrl+S のときまで持ち越す
+  const h = await store.get(K_FH);
+  if(h && typeof h.createWritable === "function") fileHandle = h;
+
+  booting=false;
+  update();
+  showQuota();
+  setState(n ? `保存済　画像${n}点` : "保存済");
+}
+
+/* 参照の消えた画像を捨てる。objectURL の解放を忘れると
+   ページを閉じるまでメモリに残り続ける */
+$("btn-gc").addEventListener("click", async ()=>{
+  const used=new Set();
+  const re=/!\[[^\]]*\]\((fig\d+)\)/g;
+  let m; while((m=re.exec(src.value))) used.add(m[1]);
+  const dead=[...IMAGES.keys()].filter(k=>!used.has(k));
+  if(!dead.length){ setState("未使用の画像はありません"); return; }
+  setState(`${dead.length}点を削除中`,"busy");
+  for(const k of dead){
+    const rec=IMAGES.get(k);
+    if(rec && rec.url) URL.revokeObjectURL(rec.url);
+    IMAGES.delete(k);
+    await store.del(K_IMG(k));
+  }
+  update();
+  showQuota();
+  setState(`${dead.length}点を削除しました`);
+});
+
+/* ══ 記法 → HTML ══════════════════════════════ */
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function inline(s){
+  s = s.replace(/《《([^》]+?)》》/g,'<span class="boten">$1</span>');
+  s = s.replace(/[|｜]([^|｜《》\n]+)《([^》\n]+)》/g,'<ruby>$1<rt>$2</rt></ruby>');
+  s = s.replace(/([\u4E00-\u9FFF々〆ヵヶ]+)《([^》\n]+)》/g,'<ruby>$1<rt>$2</rt></ruby>');
+  s = s.replace(/\*\*([^*\n]+)\*\*/g,'<span class="gothic">$1</span>');
+  return s;
+}
+const RE_FIG=/^!\[([^\]]*)\]\(([^)\s]+)\)(?:\{(\d{1,3})%\})?$/;
+const RE_TROW=/^\|(.+)\|\s*$/, RE_TSEP=/^\|[\s:|\-]+\|\s*$/, RE_TCAP=/^\[表[:：]\s*(.*)\]$/;
+const cells = l => l.replace(/^\||\|\s*$/g,"").split("|").map(s=>s.trim());
+const alignOf = s => /^:-+:$/.test(s.trim()) ? "c" : (/^-+:$/.test(s.trim()) ? "r" : "");
+
+function build(text, opt){
+  const lines=text.replace(/\r\n?/g,"\n").split("\n");
+  const out=[]; let buf=[], figNo=0, tblNo=0, pendingCap=null;
+  const flushP=()=>{
+    if(!buf.length) return;
+    let t=buf.join("");
+    if(opt.indent && !/^[「『（(　“"]/.test(t)) t="　"+t;
+    out.push(`<p>${inline(esc(t))}</p>`); buf=[];
+  };
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i].replace(/\s+$/,"");
+    if(RE_TROW.test(line) && i+1<lines.length && RE_TSEP.test(lines[i+1])){
+      flushP();
+      const head=cells(line), al=cells(lines[i+1]).map(alignOf), body=[];
+      let j=i+2;
+      while(j<lines.length && RE_TROW.test(lines[j])){ body.push(cells(lines[j])); j++; }
+      i=j-1; tblNo++;
+      const cap=pendingCap; pendingCap=null;
+      const label=opt.autonum?`表${tblNo}`:"";
+      const capHtml=(label||cap)?`<p class="tcap"><b>${label}</b>${label&&cap?"　":""}${cap?inline(esc(cap)):""}</p>`:"";
+      const th=head.map((c,k)=>`<th class="${al[k]||""}">${inline(esc(c))}</th>`).join("");
+      const tr=body.map(r=>"<tr>"+r.map((c,k)=>`<td class="${al[k]||""}">${inline(esc(c))}</td>`).join("")+"</tr>").join("");
+      out.push(`<div class="tbl">${capHtml}<table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`);
+      continue;
+    }
+    const mc=line.match(RE_TCAP);
+    if(mc){ flushP(); pendingCap=mc[1]; continue; }
+    const mf=line.match(RE_FIG);
+    if(mf){
+      flushP(); figNo++;
+      const [,cap,ref,w]=mf;
+      const rec=IMAGES.get(ref);
+      const url=rec?rec.url:(/^(https?:|data:|\.\/|\/)/.test(ref)?ref:null);
+      const label=opt.autonum?`図${figNo}`:"";
+      const body=url
+        ? `<img src="${url}" alt="${esc(cap)}" data-ref="${esc(ref)}"${w?` style="width:${w}%"`:""}>`
+        : `<span class="miss">画像 ${esc(ref)} が見つかりません</span>`;
+      out.push(`<figure>${body}<figcaption><b>${label}</b>${label&&cap?"　":""}${inline(esc(cap))}<span class="dpi"></span></figcaption></figure>`);
+      continue;
+    }
+    const mh=line.match(/^(#{1,6})\s+(.*)$/);
+    if(mh){ flushP(); out.push(`<p class="h${mh[1].length}">${inline(esc(mh[2]))}</p>`); }
+    else if(/^(-{3,}|\[改頁\]|\[改ページ\])$/.test(line)){ flushP(); out.push('<span class="pagebreak"></span>'); }
+    else if(/^>\s?/.test(line)){ flushP(); out.push(`<p class="quote">${inline(esc(line.replace(/^>\s?/,"")))}</p>`); }
+    else if(line===""){ flushP(); }
+    else buf.push(line);
+  }
+  flushP();
+  return out.join("") || '<p style="color:#9AA5B1">ここに版面どおりに表示されます</p>';
+}
+function plainLen(s){
+  return s.replace(/^#{1,6}\s+/gm,"").replace(/^>\s?/gm,"").replace(/^-{3,}$/gm,"")
+    .replace(/^!\[[^\]]*\]\([^)]*\).*$/gm,"").replace(/^\|.*\|$/gm,"").replace(/^\[表[:：].*\]$/gm,"")
+    .replace(/《《([^》]+?)》》/g,"$1").replace(/《[^》\n]+》/g,"")
+    .replace(/[|｜]/g,"").replace(/\*\*/g,"").replace(/[\s　]/g,"").length;
+}
+
+/* ══ 版面 ══════════════════════════════════════ */
+function update(){
+  const [pw,ph]=$("size").value.split(",").map(Number);
+  const mv=+$("mv").value||20, mh=+$("mh").value||20;
+  const pt=+$("pt").value||9.5, lhr=(+$("lh").value||170)/100;
+  const z=(+$("zoom").value||85)/100, px=MM*z;
+  const pageW=pw*px, pageH=ph*px, mV=mv*px, mH=mh*px;
+  const fs=pt*PT*px, adv=fs*lhr;
+  const contentW=pageW-mH*2, contentH=pageH-mV*2;
+  const perLine=Math.floor((dir==="h"?contentW:contentH)/fs);
+  const perPage=Math.floor((dir==="h"?contentH:contentW)/adv);
+
+  sheet.className="sheet "+dir;
+  sheet.style.fontSize=fs+"px";
+  sheet.style.fontFamily=$("face").value;
+  sheet.style.lineHeight=String(lhr);
+  sheet.style.padding=mV+"px "+mH+"px";
+  sheet.style.width="";
+
+  flow.innerHTML=build(src.value,{indent:$("indent").checked, autonum:$("autonum").checked});
+
+  /* 未読込の画像は高さ0で測られ、ページ数が足りなくなる。
+     読み終わったら一度だけ組み直す */
+  flow.querySelectorAll("img").forEach(img=>{
+    if(img.complete && img.naturalWidth) return;
+    img.addEventListener("load", schedule, {once:true});
+    img.addEventListener("error", schedule, {once:true});
+  });
+
+  if(dir==="h"){
+    flow.style.cssText=`height:${perPage*adv}px;column-width:${contentW}px;column-gap:${mH*2+GUT}px;column-fill:auto;writing-mode:horizontal-tb;text-align:justify;`;
+    flow.querySelectorAll(".pagebreak").forEach(el=>{ el.style.breakBefore="column"; });
+  }else{
+    flow.style.cssText=`height:${perLine*fs}px;writing-mode:vertical-rl;text-orientation:mixed;`;
+  }
+
+  let pages, unit;
+  if(dir==="h"){
+    /* 段組みの段数は、幅が確定して初めて決まる。幅を与えるまでは
+       段数1として扱われ、あふれた分は段の外に押し出される。
+       そこで「幅を与える → はみ出しを測る → 足りない分を足す」を
+       収まるまで繰り返す。比例して継ぎ足すので数回で止まる */
+    const u = contentW + mH*2 + GUT;
+    unit = pageW + GUT;
+    pages = Math.max(1, Math.round((flow.scrollWidth + mH*2 + GUT)/u));
+    for(let i=0;i<12;i++){
+      sheet.style.width = (pages*pageW + (pages-1)*GUT) + "px";
+      const need = flow.scrollWidth, have = flow.clientWidth;
+      if(need <= have + 1) break;
+      pages += Math.max(1, Math.ceil((need - have)/u));
+    }
+    sheet.style.height=pageH+"px";
+    sheet.style.backgroundImage=`repeating-linear-gradient(to right, var(--paper) 0 ${pageW}px, transparent ${pageW}px ${pageW+GUT}px)`;
+  }else{
+    unit=perPage*adv;
+    pages=Math.max(1,Math.ceil((Math.max(flow.scrollWidth,flow.offsetWidth)-0.5)/unit));
+    sheet.style.width=(pages*unit+mH*2)+"px";
+    sheet.style.height=pageH+"px";
+    sheet.style.backgroundImage=`repeating-linear-gradient(to left, var(--paper) 0 ${unit-1}px, #DCD8CE ${unit-1}px ${unit}px)`;
+  }
+
+  drawMarks(pages,{pageW,pageH,mV,mH,contentW,contentH,adv,perPage,unit});
+  checkDpi(z);
+
+  const n=plainLen(src.value);
+  $("ro-men").innerHTML=`<b>${perLine}</b>字 × <b>${perPage}</b>行`;
+  $("ro-pg").innerHTML=`<b>${pages}</b>P<span style="color:#5A6470"> ／ 面付 ${Math.ceil(pages/4)*4}P</span>`;
+  $("ro-ct").innerHTML=`<b>${n.toLocaleString()}</b>`;
+  $("ro-zoom").textContent=Math.round(z*100)+"%";
+  saveDoc();
+}
+
+function checkDpi(zoom){
+  let low=0, vol=0;
+  flow.querySelectorAll("figure img").forEach(img=>{
+    const cap=img.parentElement.querySelector(".dpi");
+    const rec=IMAGES.get(img.dataset.ref);
+    if(rec && rec.volatile) vol++;
+    const natW=rec?rec.w:img.naturalWidth;
+    const shown=img.getBoundingClientRect().width;
+    if(!natW||!shown){ cap.textContent=""; return; }
+    const mmW=shown/(MM*zoom);
+    const dpi=Math.round(natW/(mmW/25.4));
+    cap.textContent=`${natW}px → ${mmW.toFixed(0)}mm ／ ${dpi}dpi`;
+    cap.classList.toggle("low", dpi<DPI_MIN);
+    if(dpi<DPI_MIN) low++;
+  });
+  let bytes=0; IMAGES.forEach(r=>bytes+=r.bytes);
+  $("ro-img").innerHTML = IMAGES.size
+    ? `<b>${IMAGES.size}</b>点 ${(bytes/1048576).toFixed(1)}MB`
+      + (low?` <span class="warn">${low}点が${DPI_MIN}dpi未満</span>`:"")
+      + (vol?` <span class="warn">${vol}点は未保存</span>`:"")
+    : "—";
+}
+
+function drawMarks(pages,g){
+  const frag=document.createDocumentFragment();
+  for(let i=0;i<pages;i++){
+    const f=document.createElement("div"); f.className="frame";
+    if(dir==="h"){
+      f.style.left=(i*(g.pageW+GUT)+g.mH)+"px"; f.style.top=g.mV+"px";
+      f.style.width=g.contentW+"px"; f.style.height=(g.perPage*g.adv)+"px";
+    }else{
+      f.style.right=(i*g.unit+g.mH)+"px"; f.style.top=g.mV+"px";
+      f.style.width=g.unit+"px"; f.style.height=g.contentH+"px";
+    }
+    frag.appendChild(f);
+    const nb=document.createElement("div"); nb.className="nombre"; nb.textContent=String(i+1);
+    if(dir==="h"){ nb.style.left=(i*(g.pageW+GUT))+"px"; nb.style.width=g.pageW+"px"; }
+    else{ nb.style.right=(i*g.unit)+"px"; nb.style.width=g.unit+"px"; }
+    nb.style.bottom=Math.max(4,g.mV*0.32)+"px";
+    frag.appendChild(nb);
+  }
+  marks.replaceChildren(frag);
+}
+
+let t=null;
+const schedule=()=>{ clearTimeout(t); t=setTimeout(update,120); };
+
+/* ══ 画像の取り込み ════════════════════════════ */
+function readImage(file){
+  return new Promise(res=>{
+    const url = URL.createObjectURL(file);
+    const probe = new Image();
+    probe.onload = () => res({blob:file, url, w:probe.naturalWidth, h:probe.naturalHeight, bytes:file.size, name:file.name});
+    probe.onerror = () => { URL.revokeObjectURL(url); res(null); };
+    probe.src = url;
+  });
+}
+async function intake(files){
+  const list=[...files].filter(f=>/^image\//.test(f.type));
+  if(!list.length) return;
+  setState("画像を取り込み中","busy");
+  const refs=[]; let failed=0;
+  for(const f of list){
+    const rec=await readImage(f);
+    if(!rec) continue;
+    const key="fig"+(++imgSeq);
+    IMAGES.set(key, rec);
+    if(!await saveImage(key, rec)) failed++;
+    refs.push({key, name:f.name.replace(/\.[^.]+$/,"")});
+  }
+  if(!refs.length){ setState("画像を読めませんでした","bad"); return; }
+  const v=src.value, p=src.selectionStart;
+  put((p===0||v[p-1]==="\n"?"":"\n")+"\n"+refs.map(r=>`![${r.name}](${r.key})`).join("\n")+"\n\n");
+  showQuota();
+  setState(failed ? `${failed}点を保存できませんでした` : "保存済", failed?"bad":"");
+}
+
+$("btn-img").addEventListener("click",()=>$("file").click());
+$("file").addEventListener("change",e=>{ intake(e.target.files); e.target.value=""; });
+src.addEventListener("paste",e=>{
+  const f=e.clipboardData&&e.clipboardData.files;
+  if(f&&f.length&&[...f].some(x=>/^image\//.test(x.type))){ e.preventDefault(); intake(f); }
+});
+src.addEventListener("dragover",e=>{ e.preventDefault(); src.classList.add("dragover"); });
+src.addEventListener("dragleave",()=>src.classList.remove("dragover"));
+src.addEventListener("drop",e=>{
+  if(e.dataTransfer&&e.dataTransfer.files.length){ e.preventDefault(); src.classList.remove("dragover"); intake(e.dataTransfer.files); }
+});
+$("btn-tbl").addEventListener("click",()=>{
+  const v=src.value,p=src.selectionStart;
+  put((p===0||v[p-1]==="\n"?"":"\n")+"\n[表: 説明]\n\n| 項目 | 内容 |\n| --- | --- |\n|  |  |\n|  |  |\n\n");
+});
+
+/* ══════════════════════════════════════════════
+   書き出し
+   ══════════════════════════════════════════════ */
+const K_FH = "hanshita:filehandle";
+let fileHandle = null;                       // 上書き先。IndexedDB に持ち越せる
+const HAS_FS = "showSaveFilePicker" in window;
+
+// 章題から素直なファイル名を作る
+function baseName(){
+  const m = src.value.match(/^#\s+(.+)$/m);
+  const s = (m ? m[1] : "genko").replace(/[\\/:*?"<>|]/g,"").trim();
+  return (s || "genko").slice(0,60);
+}
+function extOf(rec){
+  const t=(rec.blob&&rec.blob.type)||"";
+  if(t==="image/png") return "png";
+  if(t==="image/jpeg") return "jpg";
+  if(t==="image/webp") return "webp";
+  if(t==="image/gif") return "gif";
+  if(t==="image/svg+xml") return "svg";
+  const m=(rec.name||"").match(/\.([a-z0-9]+)$/i);
+  return m ? m[1].toLowerCase() : "png";
+}
+function download(name, data, mime){
+  const blob = data instanceof Blob ? data : new Blob([data], {type:mime||"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+// 記法を落とした素のテキスト
+function toPlain(text){
+  return text.replace(/\r\n?/g,"\n")
+    .replace(/^#{1,6}\s+/gm,"")
+    .replace(/^>\s?/gm,"")
+    .replace(/^-{3,}$/gm,"")
+    .replace(/^!\[([^\]]*)\]\([^)]*\)(?:\{\d{1,3}%\})?$/gm,(_,c)=>`［図：${c}］`)
+    .replace(/^\[表[:：]\s*(.*)\]$/gm,(_,c)=>`［表：${c}］`)
+    .replace(/^\|[\s:|\-]+\|\s*$/gm,"")                     // 区切り行を捨てる
+    .replace(/^\|(.+)\|\s*$/gm,(_,r)=>r.split("|").map(s=>s.trim()).join("\t"))
+    .replace(/《《([^》]+?)》》/g,"$1")
+    .replace(/[|｜]([^|｜《》\n]+)《[^》\n]+》/g,"$1")        // ルビは親文字だけ残す
+    .replace(/《[^》\n]+》/g,"")
+    .replace(/\*\*([^*\n]+)\*\*/g,"$1")
+    .replace(/\n{3,}/g,"\n\n");
+}
+
+async function grantable(h, mode){
+  if(!h) return false;
+  const opt={mode};
+  if(await h.queryPermission(opt) === "granted") return true;
+  return await h.requestPermission(opt) === "granted";   // 要ユーザー操作
+}
+async function writeTo(h, text){
+  const w = await h.createWritable();
+  await w.write(text);
+  await w.close();
+}
+
+async function saveAs(){
+  if(!HAS_FS){ download(baseName()+".md", src.value); return; }
+  try{
+    fileHandle = await window.showSaveFilePicker({
+      suggestedName: baseName()+".md",
+      types:[{description:"Markdown", accept:{"text/markdown":[".md",".txt"]}}]
+    });
+    await writeTo(fileHandle, src.value);
+    await store.set(K_FH, fileHandle);            // ハンドルは構造化複製で保存できる
+    setState("保存しました "+fileHandle.name);
+  }catch(e){ if(e.name!=="AbortError") setState("保存できませんでした","bad"); }
+}
+async function saveNow(){
+  if(!HAS_FS){ download(baseName()+".md", src.value); return; }
+  if(!fileHandle){ return saveAs(); }
+  try{
+    if(!await grantable(fileHandle,"readwrite")){ return saveAs(); }
+    await writeTo(fileHandle, src.value);
+    setState("保存しました "+fileHandle.name);
+  }catch(e){ setState("保存できませんでした","bad"); }
+}
+
+// 原稿と図版を1つのフォルダに出し、参照を相対パスに書き換える
+async function exportDir(){
+  const rewrite = new Map();
+  IMAGES.forEach((rec,key)=>rewrite.set(key, `./img/${key}.${extOf(rec)}`));
+  const md = src.value.replace(/(!\[[^\]]*\]\()(fig\d+)(\))/g,
+    (m,a,key,c)=> rewrite.has(key) ? a+rewrite.get(key)+c : m);
+
+  if(!("showDirectoryPicker" in window)){
+    // 逐次ダウンロードに退避。ブラウザが複数ファイルの許可を尋ねる
+    download(baseName()+".md", md);
+    for(const [key,rec] of IMAGES){
+      await new Promise(r=>setTimeout(r,250));
+      download(`${key}.${extOf(rec)}`, rec.blob);
+    }
+    setState(`${IMAGES.size+1}件をダウンロードしました`);
+    return;
+  }
+  try{
+    const dir = await window.showDirectoryPicker({mode:"readwrite"});
+    const fh = await dir.getFileHandle(baseName()+".md",{create:true});
+    await writeTo(fh, md);
+    if(IMAGES.size){
+      const img = await dir.getDirectoryHandle("img",{create:true});
+      let i=0;
+      for(const [key,rec] of IMAGES){
+        const h = await img.getFileHandle(`${key}.${extOf(rec)}`,{create:true});
+        const w = await h.createWritable();
+        await w.write(rec.blob); await w.close();
+        setState(`図版を書き出し中 ${++i}/${IMAGES.size}`,"busy");
+      }
+    }
+    setState(`${dir.name} に書き出しました`);
+  }catch(e){ if(e.name!=="AbortError") setState("書き出せませんでした","bad"); }
+}
+
+const menu = $("menu");
+const closeMenu = () => menu.removeAttribute("open");
+$("ex-save").addEventListener("click",()=>{ closeMenu(); saveNow(); });
+$("ex-saveas").addEventListener("click",()=>{ closeMenu(); saveAs(); });
+$("ex-md").addEventListener("click",()=>{ closeMenu(); download(baseName()+".md", src.value); setState("ダウンロードしました"); });
+$("ex-txt").addEventListener("click",()=>{ closeMenu(); download(baseName()+".txt", toPlain(src.value)); setState("ダウンロードしました"); });
+$("ex-dir").addEventListener("click",()=>{ closeMenu(); exportDir(); });
+document.addEventListener("click",e=>{ if(menu.open && !menu.contains(e.target)) closeMenu(); });
+
+if(!HAS_FS){
+  $("ex-save").style.display="none";
+  $("ex-saveas").style.display="none";
+}
+
+/* ══ 入力補助 ══════════════════════════════════ */
+function put(text,back){
+  src.focus();
+  const start=src.selectionStart;
+  let ok=false;
+  try{ ok=document.execCommand("insertText",false,text); }catch(e){ ok=false; }
+  if(!ok){
+    const end=src.selectionEnd;
+    src.value=src.value.slice(0,start)+text+src.value.slice(end);
+    src.selectionStart=src.selectionEnd=start+text.length;
+  }
+  if(back){ const q=src.selectionStart-back; src.selectionStart=src.selectionEnd=q; }
+  schedule();
+}
+function wrap(pattern,back){
+  const sel=src.value.slice(src.selectionStart,src.selectionEnd);
+  const tail=pattern.length-pattern.indexOf("‖")-1;
+  put(pattern.replace("‖",sel), back!=null?back:(sel?0:tail));
+}
+function prefix(mark){
+  const v=src.value, s=v.lastIndexOf("\n",src.selectionStart-1)+1;
+  const e=v.indexOf("\n",s), line=v.slice(s,e<0?v.length:e);
+  const stripped=line.replace(/^(#{1,6}\s+|>\s?)/,"");
+  src.selectionStart=s; src.selectionEnd=s+line.length;
+  put(line.startsWith(mark)?stripped:mark+stripped);
+}
+function block(str){
+  const v=src.value,p=src.selectionStart;
+  put((p===0||v[p-1]==="\n"?"":"\n")+"\n"+str+"\n\n");
+}
+$("bar").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.prefix) prefix(b.dataset.prefix.replace("&gt;",">"));
+  else if(b.dataset.block) block(b.dataset.block);
+  else if(b.dataset.wrap) wrap(b.dataset.wrap,b.dataset.back?+b.dataset.back:null);
+  else if(b.dataset.insert) put(b.dataset.insert);
+});
+src.addEventListener("keydown",e=>{
+  if(e.isComposing) return;
+  if((e.metaKey||e.ctrlKey)&&!e.shiftKey&&!e.altKey){
+    const k=e.key.toLowerCase();
+    if(k==="r"){ e.preventDefault(); wrap("|‖《‖》",1); }
+    else if(k==="e"){ e.preventDefault(); wrap("《《‖》》"); }
+    else if(k==="b"){ e.preventDefault(); wrap("**‖**"); }
+    else if(k==="s"){ e.preventDefault(); saveNow(); }
+  }
+  if(e.key==="Tab"){ e.preventDefault(); put("　"); }
+});
+src.addEventListener("input",schedule);
+
+$("dir").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  dir=b.dataset.dir;
+  [...$("dir").children].forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  update();
+});
+$("size").addEventListener("change",e=>{
+  const [,,mv,mh]=e.target.value.split(",");
+  $("mv").value=mv; $("mh").value=mh; update();
+});
+["mv","mh","pt","lh","face","indent","autonum","zoom"].forEach(id=>{
+  $(id).addEventListener("input",update);
+  $(id).addEventListener("change",update);
+});
+window.addEventListener("resize",schedule);
+
+// 閉じる前に保留中の書き込みを確定させる
+window.addEventListener("beforeunload",()=>{
+  if(!booting && store.ok()){
+    clearTimeout(docTimer);
+    store.set(K_DOC,{text:src.value, conf:conf(), seq:imgSeq, at:Date.now()});
+  }
+});
+
+const SAMPLE = `# 第一章　スレッド境界をまたぐ文字列
+
+　B5の横組みは、技術系の同人誌でいちばん多く使われる形です。図版と等幅のコードを並べても窮屈になりません。
+
+## 一・一　符号化の対応表
+
+[表: 各層での文字列の扱い]
+
+| 層 | 単位 | 長さの意味 |
+| --- | :---: | --- |
+| C++ std::string | バイト | 符号化に依存する |
+| Java String | UTF-16 | 補助文字は2つ分 |
+| JNI 境界 | 修正UTF-8 | NUL の表現が違う |
+
+　同じ「長さ」という語が、層をまたぐたびに別のものを指しています。この不一致が、境界で静かに崩れます。
+
+　画像はこのエディタに直接ドロップするか、貼り付けてください。取り込むと ![図の説明](fig1) の形で参照が入ります。
+
+---
+
+# 第二章　朝
+`;
+
+restore();
+})();
+</script>
+</body>
+</html>
