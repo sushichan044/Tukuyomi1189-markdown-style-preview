@@ -797,16 +797,15 @@ function validate(text){
   }
   if(badSpeakers.size) warns.push(`吹き出しのキャラクター名が規定外です: ${[...badSpeakers].join("、")}(使用可: ${ALLOWED_SPEAKERS.join("/")})`);
 
-  const badNames=new Set();
+  const badPaths=new Set();
   const reImg=/!\[[^\]]*\]\(([^)\s]+)\)/g;
   let im;
   while((im=reImg.exec(text))){
     const ref=im[1];
     if(/^fig\d+$/.test(ref) || /^(https?:|data:)/.test(ref)) continue;
-    const base=ref.split("/").pop();
-    if(!/^.+_fig\d+\.\w+$/i.test(base)) badNames.add(base);
+    if(!/^images\/.+_fig\d+\.\w+$/i.test(ref)) badPaths.add(ref);
   }
-  if(badNames.size) warns.push(`画像ファイル名が「ペンネーム_fig番号.拡張子」形式ではありません: ${[...badNames].join("、")}`);
+  if(badPaths.size) warns.push(`画像パスが「images/ペンネーム_fig番号.拡張子」形式ではありません: ${[...badPaths].join("、")}`);
 
   const total=text.replace(/\r\n?/g,"").length;
   if(total>MAX_CHARS) warns.push(`分量が上限(${MAX_CHARS.toLocaleString()}字)を超えています。現在 ${total.toLocaleString()}字`);
