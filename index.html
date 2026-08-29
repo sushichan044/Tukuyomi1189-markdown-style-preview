@@ -249,6 +249,7 @@ main{flex:1 1 auto;display:flex;min-height:0;}
       <button type="button" data-block="---">改頁</button>
       <span class="sep"></span>
       <button type="button" id="btn-img">画像を置く</button>
+      <button type="button" id="btn-imgw">表示幅</button>
       <button type="button" id="btn-tbl">表を置く</button>
       <span class="sep"></span>
       <button type="button" data-wrap="|‖《‖》" data-back="1">ルビ<span class="k">^R</span></button>
@@ -869,6 +870,20 @@ async function intake(files){
 }
 
 $("btn-img").addEventListener("click",()=>$("file").click());
+$("btn-imgw").addEventListener("click", setImageWidth);
+// カーソル行が画像記法なら、末尾の {NN%} を対話的に設定する
+function setImageWidth(){
+  const v=src.value, s=v.lastIndexOf("\n",src.selectionStart-1)+1;
+  const e=v.indexOf("\n",s), line=v.slice(s,e<0?v.length:e);
+  const m=line.match(RE_FIG);
+  if(!m){ setState("画像の行にカーソルを置いてから押してください","bad"); return; }
+  const input=prompt("表示幅を%で指定してください(10〜100、版面幅に対する割合)", m[3]||"100");
+  if(input===null) return;
+  const pct=Math.max(10,Math.min(100,Math.round(Number(input))||100));
+  const base=line.replace(/\{\d{1,3}%\}$/,"");
+  src.selectionStart=s; src.selectionEnd=s+line.length;
+  put(pct===100 ? base : `${base}{${pct}%}`);
+}
 $("file").addEventListener("change",e=>{ intake(e.target.files); e.target.value=""; });
 src.addEventListener("paste",e=>{
   const f=e.clipboardData&&e.clipboardData.files;
