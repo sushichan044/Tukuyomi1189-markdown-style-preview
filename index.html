@@ -81,7 +81,7 @@ main{flex:1 1 auto;display:flex;min-height:0;}
 #src::selection{background:var(--nonphoto);color:#fff;}
 #src.dragover{background:var(--aitetsu-2);box-shadow:inset 0 0 0 2px var(--nonphoto);}
 
-.proof{flex:1 1 60%;background:var(--daishi);border-left:1px solid #9BA4AE;}
+.proof{flex:1 1 60%;background:var(--daishi);border-left:1px solid #9BA4AE;position:relative;}
 .proof-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:7px 14px;background:#A9B2BB;border-bottom:1px solid #97A0AA;flex-shrink:0;font-family:var(--mono);font-size:11px;color:var(--aitetsu);}
 .proof-head .lbl{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#4B545F;}
 .proof-head b{font-weight:600;}
@@ -135,13 +135,51 @@ main{flex:1 1 auto;display:flex;min-height:0;}
 .v .h5{font-size:.96em;font-weight:600;color:#4B545F;margin:0 1em 0 .5em;}
 .v .h6{font-size:.92em;font-weight:600;color:#6B7684;margin:0 1em 0 .5em;}
 .v .quote{margin:1.6em 0;padding:1em 0;color:#3A424D;border-top:1px solid #D8D4CB;border-bottom:1px solid #D8D4CB;}
-.v figure,.v .tbl{writing-mode:horizontal-tb;inline-size:100%;margin:0 1.4em;}
+.v figure,.v .tbl,.v .block-note,.v .block-column,.v .balloon,.v .codeblock,.v .mathblock{writing-mode:horizontal-tb;inline-size:100%;margin:0 1.4em;}
+
+.sheet .block-note{margin:1.2em 0;padding:.8em 1em;border:1.4px solid var(--sumi);border-radius:2px;background:rgba(63,147,188,.07);break-inside:avoid;page-break-inside:avoid;}
+.sheet .block-note-label{font-family:var(--gothic);font-weight:700;font-size:.86em;margin:0 0 .4em;letter-spacing:.05em;}
+.sheet .block-column{margin:1.4em 0;padding:.9em 1.1em;background:#F1EEE6;border-top:2px solid var(--sumi);border-bottom:2px solid var(--sumi);break-inside:avoid;page-break-inside:avoid;}
+.sheet .block-column-label{font-family:var(--gothic);font-weight:700;font-size:.92em;margin:0 0 .5em;}
+.sheet .block-note p,.sheet .block-column p{margin:.3em 0;}
+
+.sheet .balloon{display:flex;align-items:flex-start;gap:.7em;margin:1.3em 0;break-inside:avoid;page-break-inside:avoid;}
+.sheet .balloon-avatar{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;width:3.6em;}
+.sheet .balloon-avatar img{width:3.6em;height:3.6em;border-radius:50%;object-fit:cover;display:block;background:#EFEDE8;}
+.sheet .balloon-avatar .noicon{width:3.6em;height:3.6em;border-radius:50%;background:#DADFE4;color:#5A6470;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--gothic);}
+.sheet .balloon-name{font-family:var(--gothic);font-size:.62em;color:#4B545F;margin-top:.3em;white-space:nowrap;}
+.sheet .balloon-bubble{position:relative;background:#EDEBE4;border-radius:14px;padding:.7em 1em;flex:1 1 auto;}
+.sheet .balloon-bubble::before{content:"";position:absolute;left:-7px;top:1em;border:7px solid transparent;border-right-color:#EDEBE4;}
+.sheet .balloon-bubble p{margin:.15em 0;}
+
+.sheet .codeblock{margin:1.3em 0;break-inside:avoid;page-break-inside:avoid;}
+.sheet .code-lang{font-family:var(--mono);font-size:.68em;color:var(--usu);margin-bottom:.3em;letter-spacing:.08em;text-transform:uppercase;}
+.sheet .codeblock pre{margin:0;padding:.8em 1em;background:#20242B;color:#DCE3EA;border-radius:3px;overflow:auto;font-family:var(--mono);font-size:.82em;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+.sheet code{font-family:var(--mono);background:rgba(63,147,188,.12);padding:.05em .3em;border-radius:2px;font-size:.92em;}
+.sheet .codeblock code{background:none;padding:0;}
+
+.sheet .mathinline{font-family:var(--mono);font-style:italic;background:rgba(184,50,42,.07);padding:0 .25em;border-radius:2px;}
+.sheet .mathblock{margin:1.2em 0;padding:.7em 1em;text-align:center;font-family:var(--mono);font-style:italic;background:#F1EEE6;border-radius:2px;white-space:pre-wrap;break-inside:avoid;page-break-inside:avoid;}
+
+.sheet ol{margin:.8em 0;padding-left:1.6em;}
+.sheet ol li{margin:.25em 0;}
+.sheet .footnote-def{font-size:.8em;color:#4B545F;margin:.5em 0;padding-left:1.4em;text-indent:-1.4em;}
+.sheet sup.fnref{font-size:.72em;color:var(--nonphoto);}
+
+.warnpanel{position:absolute;right:14px;bottom:14px;z-index:6;background:rgba(252,251,248,.97);border:1px solid var(--shu);border-radius:3px;max-width:360px;box-shadow:0 8px 20px rgba(20,23,28,.18);}
+.warnpanel.ok{border-color:#3A7D44;}
+.warnpanel summary{cursor:pointer;list-style:none;padding:7px 12px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--shu);font-weight:700;}
+.warnpanel.ok summary{color:#2E6B39;}
+.warnpanel summary::-webkit-details-marker{display:none;}
+.warnpanel[open] summary{border-bottom:1px solid #DDD9D0;}
+.warnpanel ul{margin:0;list-style:disc;padding:8px 14px 10px 26px;font-size:11.5px;line-height:1.7;color:#3A424D;max-height:220px;overflow:auto;}
+.warnpanel li{margin:0 0 4px;}
 
 .cheat{position:absolute;left:12px;bottom:12px;z-index:5;background:rgba(20,23,28,.94);border:1px solid var(--aitetsu-3);border-radius:3px;max-width:340px;}
 .cheat summary{cursor:pointer;list-style:none;padding:7px 12px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--usu-light);}
 .cheat summary::-webkit-details-marker{display:none;}
 .cheat[open] summary{border-bottom:1px solid var(--aitetsu-2);color:var(--nonphoto-pale);}
-.cheat dl{margin:0;padding:10px 12px 12px;display:grid;grid-template-columns:auto 1fr;gap:5px 12px;align-items:baseline;}
+.cheat dl{margin:0;padding:10px 12px 12px;display:grid;grid-template-columns:auto 1fr;gap:5px 12px;align-items:baseline;max-height:56vh;overflow:auto;}
 .cheat dt{font-family:var(--mono);font-size:11px;color:var(--nonphoto-pale);white-space:nowrap;}
 .cheat dd{margin:0;font-size:11px;color:var(--daishi);}
 
@@ -241,17 +279,28 @@ main{flex:1 1 auto;display:flex;min-height:0;}
     <details class="cheat">
       <summary>記法早見</summary>
       <dl>
-        <dt># 〜 ######</dt><dd>見出し。6段まで使える</dd>
+        <dt>## 〜 ####</dt><dd>見出し。ガイドラインでは2〜4段(#・#####以降は警告)</dd>
         <dt>---</dt><dd>そこで改頁する</dd>
         <dt>![説明](fig1)</dt><dd>画像。貼り付け・ドロップで取り込む</dd>
         <dt>![説明](fig1){60%}</dt><dd>版面幅に対する表示幅を指定</dd>
         <dt>![説明](images/xxx.png)</dt><dd>相対パスの画像をそのまま参照</dd>
         <dt>| A | B |</dt><dd>表。2行目を <b>| --- | --- |</b> にする</dd>
         <dt>[表: 説明]</dt><dd>表の直前に置くと見出しになる</dd>
-        <dt>|漢字《かんじ》</dt><dd>ルビ。縦線で親文字を指定</dd>
+        <dt>{漢字|かんじ}</dt><dd>ルビ(ガイドライン記法)</dd>
+        <dt>|漢字《かんじ》</dt><dd>ルビ(縦線で親文字を指定する別記法)</dd>
         <dt>《《ここ》》</dt><dd>傍点</dd>
         <dt>**ここ**</dt><dd>ゴシック体で強調</dd>
+        <dt>*ここ*</dt><dd>斜体</dd>
         <dt>&gt; 引用</dt><dd>引用ブロック</dd>
+        <dt>1. 項目</dt><dd>番号付きリスト(連続する行をまとめる)</dd>
+        <dt>`code`</dt><dd>インラインコード</dd>
+        <dt>```lang 〜 ```</dt><dd>コードブロック。langは省略可</dd>
+        <dt>$x^2$</dt><dd>インライン数式(見た目の区別のみ・組版はしない)</dd>
+        <dt>$$ 〜 $$</dt><dd>ブロック数式(同上)</dd>
+        <dt>本文[^1] / [^1]: 注記</dt><dd>脚注</dd>
+        <dt>:::note[ラベル] 〜 :::</dt><dd>注意・補足の四角枠</dd>
+        <dt>:::column[タイトル] 〜 :::</dt><dd>コラムの囲み</dd>
+        <dt>:::balloon[名前] 〜 :::</dt><dd>吹き出し。名前は かぐや／ヤチヨ／彩葉</dd>
       </dl>
     </details>
   </section>
@@ -273,6 +322,10 @@ main{flex:1 1 auto;display:flex;min-height:0;}
     <div class="paper-scroll" id="scroll">
       <div class="sheet" id="sheet"><div class="flow" id="flow"></div><div class="marks" id="marks"></div></div>
     </div>
+    <details class="warnpanel" id="warnPanel">
+      <summary id="warnSummary">検証　チェック中…</summary>
+      <ul id="warnList"></ul>
+    </details>
   </section>
 </main>
 
@@ -476,14 +529,27 @@ $("btn-gc").addEventListener("click", async ()=>{
 /* ══ 記法 → HTML ══════════════════════════════ */
 const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 function inline(s){
+  // 逐語区間(インラインコード・数式)を先に退避し、以降の記法に巻き込まれないようにする
+  const stash=[];
+  const keep=html=>{ const key=" "+stash.length+" "; stash.push(html); return key; };
+  s = s.replace(/`([^`\n]+)`/g,(_,c)=>keep(`<code>${c}</code>`));
+  s = s.replace(/\$([^$\n]+)\$/g,(_,c)=>keep(`<span class="mathinline">${c}</span>`));
   s = s.replace(/《《([^》]+?)》》/g,'<span class="boten">$1</span>');
+  s = s.replace(/\{([^{}\n]+)\|([^{}\n]+)\}/g,'<ruby>$1<rt>$2</rt></ruby>');
   s = s.replace(/[|｜]([^|｜《》\n]+)《([^》\n]+)》/g,'<ruby>$1<rt>$2</rt></ruby>');
   s = s.replace(/([\u4E00-\u9FFF々〆ヵヶ]+)《([^》\n]+)》/g,'<ruby>$1<rt>$2</rt></ruby>');
   s = s.replace(/\*\*([^*\n]+)\*\*/g,'<span class="gothic">$1</span>');
+  s = s.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
+  s = s.replace(/\[\^([^\]\s]+)\]/g,'<sup class="fnref">[$1]</sup>');
+  s = s.replace(/ (\d+) /g,(_,i)=>stash[+i]);
   return s;
 }
 const RE_FIG=/^!\[([^\]]*)\]\(([^)\s]+)\)(?:\{(\d{1,3})%\})?$/;
 const RE_TROW=/^\|(.+)\|\s*$/, RE_TSEP=/^\|[\s:|\-]+\|\s*$/, RE_TCAP=/^\[表[:：]\s*(.*)\]$/;
+const RE_OLI=/^\d+\.\s+(.*)$/;
+const RE_FNDEF=/^\[\^([^\]\s]+)\]:\s*(.*)$/;
+const RE_BLOCK_OPEN=/^:::(note|balloon|column)(?:\[([^\]]*)\])?\s*$/;
+const SPEAKER_ICON={"かぐや":"images/icons/kaguya.png","ヤチヨ":"images/icons/yachiyo.png","彩葉":"images/icons/iroha.png"};
 const cells = l => l.replace(/^\||\|\s*$/g,"").split("|").map(s=>s.trim());
 const alignOf = s => /^:-+:$/.test(s.trim()) ? "c" : (/^-+:$/.test(s.trim()) ? "r" : "");
 
@@ -512,6 +578,46 @@ function build(text, opt){
       out.push(`<div class="tbl">${capHtml}<table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`);
       continue;
     }
+    const mcode=line.match(/^```(\S*)\s*$/);
+    if(mcode){
+      flushP();
+      const body=[]; let j=i+1;
+      while(j<lines.length && !/^```\s*$/.test(lines[j])){ body.push(lines[j]); j++; }
+      i=j;
+      const langLabel=mcode[1]?`<div class="code-lang">${esc(mcode[1])}</div>`:"";
+      out.push(`<div class="codeblock">${langLabel}<pre><code>${esc(body.join("\n"))}</code></pre></div>`);
+      continue;
+    }
+    if(/^\$\$\s*$/.test(line)){
+      flushP();
+      const body=[]; let j=i+1;
+      while(j<lines.length && !/^\$\$\s*$/.test(lines[j])){ body.push(lines[j]); j++; }
+      i=j;
+      out.push(`<div class="mathblock">${esc(body.join("\n"))}</div>`);
+      continue;
+    }
+    const mblock=line.match(RE_BLOCK_OPEN);
+    if(mblock){
+      flushP();
+      const [,type,label=""]=mblock;
+      const body=[]; let j=i+1;
+      while(j<lines.length && lines[j].trim()!==":::"){ body.push(lines[j]); j++; }
+      i=j;
+      const inner=build(body.join("\n"),opt);
+      if(type==="note"){
+        out.push(`<div class="block-note"><p class="block-note-label">${esc(label||"注意")}</p>${inner}</div>`);
+      }else if(type==="column"){
+        out.push(`<div class="block-column"><p class="block-column-label">${esc(label||"コラム")}</p>${inner}</div>`);
+      }else{
+        const name=label.trim();
+        const icon=SPEAKER_ICON[name];
+        const avatar=icon
+          ? `<img src="${icon}" alt="${esc(name)}">`
+          : `<span class="noicon">${esc(name.slice(0,1)||"?")}</span>`;
+        out.push(`<div class="balloon"><div class="balloon-avatar">${avatar}<span class="balloon-name">${esc(name)}</span></div><div class="balloon-bubble">${inner}</div></div>`);
+      }
+      continue;
+    }
     const mc=line.match(RE_TCAP);
     if(mc){ flushP(); pendingCap=mc[1]; continue; }
     const mf=line.match(RE_FIG);
@@ -529,10 +635,19 @@ function build(text, opt){
       out.push(`<figure>${body}<figcaption><b>${label}</b>${label&&cap?"　":""}${inline(esc(cap))}<span class="dpi"></span></figcaption></figure>`);
       continue;
     }
+    const mfn=line.match(RE_FNDEF);
+    if(mfn){ flushP(); out.push(`<p class="footnote-def">［${esc(mfn[1])}］${inline(esc(mfn[2]))}</p>`); continue; }
     const mh=line.match(/^(#{1,6})\s+(.*)$/);
     if(mh){ flushP(); out.push(`<p class="h${mh[1].length}">${inline(esc(mh[2]))}</p>`); }
     else if(/^(-{3,}|\[改頁\]|\[改ページ\])$/.test(line)){ flushP(); out.push('<span class="pagebreak"></span>'); }
     else if(/^>\s?/.test(line)){ flushP(); out.push(`<p class="quote">${inline(esc(line.replace(/^>\s?/,"")))}</p>`); }
+    else if(RE_OLI.test(line)){
+      flushP();
+      const items=[]; let j=i;
+      while(j<lines.length && RE_OLI.test(lines[j])){ items.push(lines[j].match(RE_OLI)[1]); j++; }
+      i=j-1;
+      out.push(`<ol>${items.map(t=>`<li>${inline(esc(t))}</li>`).join("")}</ol>`);
+    }
     else if(line===""){ flushP(); }
     else buf.push(line);
   }
@@ -542,8 +657,14 @@ function build(text, opt){
 function plainLen(s){
   return s.replace(/^#{1,6}\s+/gm,"").replace(/^>\s?/gm,"").replace(/^-{3,}$/gm,"")
     .replace(/^!\[[^\]]*\]\([^)]*\).*$/gm,"").replace(/^\|.*\|$/gm,"").replace(/^\[表[:：].*\]$/gm,"")
+    .replace(/^:::\w+(\[[^\]]*\])?\s*$/gm,"").replace(/^:::\s*$/gm,"")
+    .replace(/^```.*$/gm,"").replace(/^\$\$\s*$/gm,"")
+    .replace(/^\[\^[^\]\s]+\]:\s*/gm,"").replace(/\[\^[^\]\s]+\]/g,"")
+    .replace(/^\d+\.\s+/gm,"")
     .replace(/《《([^》]+?)》》/g,"$1").replace(/《[^》\n]+》/g,"")
-    .replace(/[|｜]/g,"").replace(/\*\*/g,"").replace(/[\s　]/g,"").length;
+    .replace(/\{([^{}\n]+)\|([^{}\n]+)\}/g,"$1")
+    .replace(/[|｜]/g,"").replace(/\*\*/g,"").replace(/\*/g,"").replace(/`/g,"")
+    .replace(/[\s　]/g,"").length;
 }
 
 /* ══ 版面 ══════════════════════════════════════ */
@@ -609,6 +730,7 @@ function update(){
 
   drawMarks(pages,{pageW,pageH,mV,mH,contentW,contentH,adv,perPage,unit});
   checkDpi(z);
+  renderWarnings(validate(src.value));
 
   const n=plainLen(src.value);
   $("ro-men").innerHTML=`<b>${perLine}</b>字 × <b>${perPage}</b>行`;
@@ -639,6 +761,57 @@ function checkDpi(zoom){
       + (low?` <span class="warn">${low}点が${DPI_MIN}dpi未満</span>`:"")
       + (vol?` <span class="warn">${vol}点は未保存</span>`:"")
     : "—";
+}
+
+/* ══ 執筆ガイドライン準拠チェック ════════════════ */
+const ALLOWED_SPEAKERS=["かぐや","ヤチヨ","彩葉"];
+const MAX_CHARS=20000;
+function validate(text){
+  const warns=[];
+  const lines=text.replace(/\r\n?/g,"\n").split("\n");
+
+  let h1=0, h56=0;
+  lines.forEach(l=>{
+    const m=l.match(/^(#{1,6})\s+/);
+    if(!m) return;
+    if(m[1].length===1) h1++;
+    else if(m[1].length>=5) h56++;
+  });
+  if(h1) warns.push(`見出し1(#)が${h1}箇所あります。ガイドラインで使えるのは##〜####です`);
+  if(h56) warns.push(`見出し5・6(#####/######)が${h56}箇所あります。ガイドラインで使えるのは##〜####です`);
+
+  const badSpeakers=new Set();
+  const reBalloon=/^:::balloon\[([^\]]*)\]\s*$/gm;
+  let bm;
+  while((bm=reBalloon.exec(text))){
+    const name=bm[1].trim();
+    if(!ALLOWED_SPEAKERS.includes(name)) badSpeakers.add(name||"(名前なし)");
+  }
+  if(badSpeakers.size) warns.push(`吹き出しのキャラクター名が規定外です: ${[...badSpeakers].join("、")}(使用可: ${ALLOWED_SPEAKERS.join("/")})`);
+
+  const badNames=new Set();
+  const reImg=/!\[[^\]]*\]\(([^)\s]+)\)/g;
+  let im;
+  while((im=reImg.exec(text))){
+    const ref=im[1];
+    if(/^fig\d+$/.test(ref) || /^(https?:|data:)/.test(ref)) continue;
+    const base=ref.split("/").pop();
+    if(!/^.+_fig\d+\.\w+$/i.test(base)) badNames.add(base);
+  }
+  if(badNames.size) warns.push(`画像ファイル名が「ペンネーム_fig番号.拡張子」形式ではありません: ${[...badNames].join("、")}`);
+
+  const total=text.replace(/\r\n?/g,"").length;
+  if(total>MAX_CHARS) warns.push(`分量が上限(${MAX_CHARS.toLocaleString()}字)を超えています。現在 ${total.toLocaleString()}字`);
+
+  return warns;
+}
+function renderWarnings(warns){
+  const panel=$("warnPanel");
+  panel.classList.toggle("ok", warns.length===0);
+  $("warnSummary").textContent=warns.length?`検証　⚠ ${warns.length}件`:"検証　✓ 問題なし";
+  $("warnList").innerHTML=warns.length
+    ? warns.map(w=>`<li>${esc(w)}</li>`).join("")
+    : `<li>ガイドラインに沿った記法です</li>`;
 }
 
 function drawMarks(pages,g){
@@ -746,6 +919,10 @@ function download(name, data, mime){
 // 記法を落とした素のテキスト
 function toPlain(text){
   return text.replace(/\r\n?/g,"\n")
+    .replace(/^```(\S*)\s*$([\s\S]*?)^```\s*$/gm,(_,lang,body)=>body.replace(/^\n|\n$/g,""))
+    .replace(/^:::note(?:\[([^\]]*)\])?\s*\n([\s\S]*?)\n:::\s*$/gm,(_,label,body)=>`［${label||"注意"}］\n${body}`)
+    .replace(/^:::column(?:\[([^\]]*)\])?\s*\n([\s\S]*?)\n:::\s*$/gm,(_,label,body)=>`〈コラム：${label||""}〉\n${body}`)
+    .replace(/^:::balloon(?:\[([^\]]*)\])?\s*\n([\s\S]*?)\n:::\s*$/gm,(_,name,body)=>`${name||""}「${body.replace(/\n/g,"")}」`)
     .replace(/^#{1,6}\s+/gm,"")
     .replace(/^>\s?/gm,"")
     .replace(/^-{3,}$/gm,"")
@@ -754,9 +931,12 @@ function toPlain(text){
     .replace(/^\|[\s:|\-]+\|\s*$/gm,"")                     // 区切り行を捨てる
     .replace(/^\|(.+)\|\s*$/gm,(_,r)=>r.split("|").map(s=>s.trim()).join("\t"))
     .replace(/《《([^》]+?)》》/g,"$1")
+    .replace(/\{([^{}\n]+)\|([^{}\n]+)\}/g,"$1")             // {漢字|ルビ} は親文字だけ残す
     .replace(/[|｜]([^|｜《》\n]+)《[^》\n]+》/g,"$1")        // ルビは親文字だけ残す
     .replace(/《[^》\n]+》/g,"")
     .replace(/\*\*([^*\n]+)\*\*/g,"$1")
+    .replace(/\*([^*\n]+)\*/g,"$1")
+    .replace(/`([^`\n]+)`/g,"$1")
     .replace(/\n{3,}/g,"\n\n");
 }
 
