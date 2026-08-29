@@ -312,7 +312,7 @@ main{flex:1 1 auto;display:flex;min-height:0;}
         <dt>本文[^1] / [^1]: 注記</dt><dd>脚注</dd>
         <dt>:::note[ラベル] 〜 :::</dt><dd>注意・補足の四角枠</dd>
         <dt>:::column[タイトル] 〜 :::</dt><dd>コラムの囲み</dd>
-        <dt>:::balloon[名前] 〜 :::</dt><dd>吹き出し。名前は かぐや／ヤチヨ／彩葉</dd>
+        <dt>:::balloon[名前] 〜 :::</dt><dd>吹き出し。名前は かぐや／ヤチヨ／彩葉／ロボット</dd>
       </dl>
     </details>
   </section>
@@ -564,7 +564,7 @@ const RE_TROW=/^\|(.+)\|\s*$/, RE_TSEP=/^\|[\s:|\-]+\|\s*$/, RE_TCAP=/^\[表[:�
 const RE_OLI=/^\d+\.\s+(.*)$/;
 const RE_FNDEF=/^\[\^([^\]\s]+)\]:\s*(.*)$/;
 const RE_BLOCK_OPEN=/^:::(note|balloon|column)(?:\[([^\]]*)\])?\s*$/;
-const SPEAKER_ICON={"かぐや":"images/icons/kaguya.png","ヤチヨ":"images/icons/yachiyo.png","彩葉":"images/icons/iroha.png"};
+const SPEAKER_ICON={"かぐや":"images/icons/kaguya.png","ヤチヨ":"images/icons/yachiyo.png","彩葉":"images/icons/iroha.png","ロボット":"images/icons/robot.png"};
 const cells = l => l.replace(/^\||\|\s*$/g,"").split("|").map(s=>s.trim());
 const alignOf = s => /^:-+:$/.test(s.trim()) ? "c" : (/^-+:$/.test(s.trim()) ? "r" : "");
 
@@ -809,7 +809,7 @@ function checkDpi(zoom){
 }
 
 /* ══ 執筆ガイドライン準拠チェック ════════════════ */
-const ALLOWED_SPEAKERS=["かぐや","ヤチヨ","彩葉"];
+const ALLOWED_SPEAKERS=["かぐや","ヤチヨ","彩葉","ロボット"];
 const MAX_CHARS=20000;
 function validate(text){
   const warns=[];
