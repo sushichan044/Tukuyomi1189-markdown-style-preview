@@ -108,6 +108,16 @@ main{flex:1 1 auto;display:flex;min-height:0;}
 .sheet figure img{max-width:100%;height:auto;display:block;margin:0 auto;background:#EFEDE8;cursor:pointer;}
 .sheet figure img:hover{outline:2px solid var(--nonphoto);outline-offset:2px;}
 .sheet figure .miss{display:block;padding:2.2em 1em;border:1px dashed var(--shu);color:var(--shu);font-family:var(--mono);font-size:.8em;}
+.sheet figure .ph-box{display:none;}
+.sheet figure.img-fallback img{display:none;}
+.sheet figure.img-fallback .ph-box{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4em;
+  min-height:8em;margin:0 auto;padding:1em;box-sizing:border-box;
+  background:repeating-linear-gradient(45deg,#E7E3D8,#E7E3D8 10px,#EFEDE8 10px,#EFEDE8 20px);
+  border:1px dashed var(--usu-light);color:var(--usu);
+}
+.sheet figure .ph-box .ph-mark{font-family:var(--gothic);font-size:.85em;letter-spacing:.15em;}
+.sheet figure .ph-box .ph-ref{font-family:var(--mono);font-size:.72em;color:var(--usu-light);word-break:break-all;text-align:center;max-width:100%;}
 .sheet figcaption{margin-top:.5em;font-family:var(--gothic);font-size:.82em;color:#3A424D;text-align:center;line-height:1.5;}
 .sheet figcaption .dpi{font-family:var(--mono);font-size:.86em;color:var(--usu);margin-left:.6em;}
 .sheet figcaption .dpi.low{color:var(--shu);font-weight:700;}
@@ -632,8 +642,13 @@ function build(text, opt){
       // そのまま画像パスとして扱い、外部/相対参照のプレビューを可能にする
       const url=rec?rec.url:(/^fig\d+$/.test(ref)?null:ref);
       const label=opt.autonum?`図${figNo}`:"";
+      const wstyle=w?` style="width:${w}%"`:"";
+      // デモ環境など画像本体が置かれていない場所では img が読み込みエラーになる。
+      // その場合に備え、同じ場所へ仮の四角枠(ph-box)も重ねて用意しておき、
+      // update() 側の error ハンドラで表示を切り替える(記法チェック自体は常に行う)
       const body=url
-        ? `<img src="${url}" alt="${esc(cap)}" data-ref="${esc(ref)}"${w?` style="width:${w}%"`:""}>`
+        ? `<img src="${url}" alt="${esc(cap)}" data-ref="${esc(ref)}"${wstyle}>`
+          +`<div class="ph-box"${wstyle}><span class="ph-mark">画像</span><span class="ph-ref">${esc(ref)}</span></div>`
         : `<span class="miss">画像 ${esc(ref)} が見つかりません</span>`;
       out.push(`<figure>${body}<figcaption><b>${label}</b>${label&&cap?"　":""}${inline(esc(cap))}<span class="dpi"></span></figcaption></figure>`);
       continue;
@@ -694,9 +709,11 @@ function update(){
   /* 未読込の画像は高さ0で測られ、ページ数が足りなくなる。
      読み終わったら一度だけ組み直す */
   flow.querySelectorAll("img").forEach(img=>{
-    if(!(img.complete && img.naturalWidth)){
+    if(img.complete){
+      if(!img.naturalWidth) markImageFallback(img);
+    }else{
       img.addEventListener("load", schedule, {once:true});
-      img.addEventListener("error", schedule, {once:true});
+      img.addEventListener("error", ()=>{ markImageFallback(img); schedule(); }, {once:true});
     }
     // クリックで表示幅を変更できるようにする(カーソル操作が要らない近道)
     if(img.dataset.ref){
@@ -747,6 +764,13 @@ function update(){
   $("ro-ct").innerHTML=`<b>${n.toLocaleString()}</b>`;
   $("ro-zoom").textContent=Math.round(z*100)+"%";
   saveDoc();
+}
+
+// 実体を読み込めなかった画像を、壊れたアイコンではなく仮の四角枠で示す。
+// デモ環境(images/ を配信していないWeb版)でも、パスの記法チェックはこれとは別に validate() が行う
+function markImageFallback(img){
+  const fig=img.closest("figure");
+  if(fig) fig.classList.add("img-fallback");
 }
 
 function checkDpi(zoom){
