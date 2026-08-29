@@ -112,7 +112,7 @@ main{flex:1 1 auto;display:flex;min-height:0;}
 .sheet figure.img-fallback img{display:none;}
 .sheet figure.img-fallback .ph-box{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4em;
-  min-height:8em;margin:0 auto;padding:1em;box-sizing:border-box;
+  min-height:8em;margin:0 auto;padding:1em;box-sizing:border-box;cursor:pointer;
   background:repeating-linear-gradient(45deg,#E7E3D8,#E7E3D8 10px,#EFEDE8 10px,#EFEDE8 20px);
   border:1px dashed var(--usu-light);color:var(--usu);
 }
@@ -348,6 +348,9 @@ const $ = id => document.getElementById(id);
 const src=$("src"), sheet=$("sheet"), flow=$("flow"), marks=$("marks"), stateEl=$("state");
 
 const MM=96/25.4, PT=25.4/72, GUT=14, DPI_MIN=300;
+// 公開デモ(images/ 本体を配信していない)では、相対パス画像の読み込み自体を試みず
+// 最初から仮の四角枠にする。ローカル等では従来どおり読み込みを試みて失敗時のみ枠にする
+const IS_DEMO = location.hostname === "tukuyomi1189.github.io";
 
 const IMAGES = new Map();   // fig1 → {blob, url, w, h, bytes}
 let imgSeq = 0;
@@ -623,7 +626,7 @@ function build(text, opt){
         out.push(`<div class="block-column"><p class="block-column-label">${esc(label||"コラム")}</p>${inner}</div>`);
       }else{
         const name=label.trim();
-        const icon=SPEAKER_ICON[name];
+        const icon=IS_DEMO?null:SPEAKER_ICON[name]; // デモではアイコン本体が無いので読み込みを試みない
         const avatar=icon
           ? `<img src="${icon}" alt="${esc(name)}">`
           : `<span class="noicon">${esc(name.slice(0,1)||"?")}</span>`;
@@ -643,14 +646,18 @@ function build(text, opt){
       const url=rec?rec.url:(/^fig\d+$/.test(ref)?null:ref);
       const label=opt.autonum?`図${figNo}`:"";
       const wstyle=w?` style="width:${w}%"`:"";
-      // デモ環境など画像本体が置かれていない場所では img が読み込みエラーになる。
-      // その場合に備え、同じ場所へ仮の四角枠(ph-box)も重ねて用意しておき、
-      // update() 側の error ハンドラで表示を切り替える(記法チェック自体は常に行う)
+      // IMAGES(貼り付け画像)に無く、かつパスとして解決されたもの=外部/相対パス参照。
+      // 公開デモではこの実体を配信していないため、読み込みを試みず最初から枠にする。
+      // それ以外(ローカル等)は img を読み込んでみて、失敗時のみ update() 側で枠に切り替える
+      // (記法のパス形式チェック自体は、表示できるかどうかに関わらず常に行われる)
+      const isPathRef=!rec && !!url;
+      const skipLoad=IS_DEMO && isPathRef;
+      const phBox=`<div class="ph-box" data-ref="${esc(ref)}"${wstyle}><span class="ph-mark">画像</span><span class="ph-ref">${esc(ref)}</span></div>`;
       const body=url
-        ? `<img src="${url}" alt="${esc(cap)}" data-ref="${esc(ref)}"${wstyle}>`
-          +`<div class="ph-box"${wstyle}><span class="ph-mark">画像</span><span class="ph-ref">${esc(ref)}</span></div>`
+        ? (skipLoad ? phBox : `<img src="${url}" alt="${esc(cap)}" data-ref="${esc(ref)}"${wstyle}>`+phBox)
         : `<span class="miss">画像 ${esc(ref)} が見つかりません</span>`;
-      out.push(`<figure>${body}<figcaption><b>${label}</b>${label&&cap?"　":""}${inline(esc(cap))}<span class="dpi"></span></figcaption></figure>`);
+      const figClass=skipLoad?` class="img-fallback"`:"";
+      out.push(`<figure${figClass}>${body}<figcaption><b>${label}</b>${label&&cap?"　":""}${inline(esc(cap))}<span class="dpi"></span></figcaption></figure>`);
       continue;
     }
     const mfn=line.match(RE_FNDEF);
@@ -720,6 +727,11 @@ function update(){
       img.title="クリックで表示幅を変更";
       img.addEventListener("click", ()=>setImageWidthByRef(img.dataset.ref));
     }
+  });
+  // img を省略した仮の四角枠(公開デモ)側にも同じくクリック操作を用意する
+  flow.querySelectorAll(".ph-box[data-ref]").forEach(box=>{
+    box.title="クリックで表示幅を変更";
+    box.addEventListener("click", ()=>setImageWidthByRef(box.dataset.ref));
   });
 
   if(dir==="h"){
