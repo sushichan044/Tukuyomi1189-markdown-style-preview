@@ -605,7 +605,8 @@ function build(text, opt){
       const body=[]; let j=i+1;
       while(j<lines.length && lines[j].trim()!==":::"){ body.push(lines[j]); j++; }
       i=j;
-      const inner=build(body.join("\n"),opt);
+      // note/balloon/column の中は囲み・セリフとして扱い、字下げは適用しない
+      const inner=build(body.join("\n"),{...opt, indent:false});
       if(type==="note"){
         out.push(`<div class="block-note"><p class="block-note-label">${esc(label||"注意")}</p>${inner}</div>`);
       }else if(type==="column"){
