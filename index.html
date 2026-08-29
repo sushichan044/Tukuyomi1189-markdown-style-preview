@@ -245,6 +245,7 @@ main{flex:1 1 auto;display:flex;min-height:0;}
         <dt>---</dt><dd>そこで改頁する</dd>
         <dt>![説明](fig1)</dt><dd>画像。貼り付け・ドロップで取り込む</dd>
         <dt>![説明](fig1){60%}</dt><dd>版面幅に対する表示幅を指定</dd>
+        <dt>![説明](images/xxx.png)</dt><dd>相対パスの画像をそのまま参照</dd>
         <dt>| A | B |</dt><dd>表。2行目を <b>| --- | --- |</b> にする</dd>
         <dt>[表: 説明]</dt><dd>表の直前に置くと見出しになる</dd>
         <dt>|漢字《かんじ》</dt><dd>ルビ。縦線で親文字を指定</dd>
@@ -518,7 +519,9 @@ function build(text, opt){
       flushP(); figNo++;
       const [,cap,ref,w]=mf;
       const rec=IMAGES.get(ref);
-      const url=rec?rec.url:(/^(https?:|data:|\.\/|\/)/.test(ref)?ref:null);
+      // fig1 のような自動採番キー以外（images/xxx.png、./xxx、https:// など）は
+      // そのまま画像パスとして扱い、外部/相対参照のプレビューを可能にする
+      const url=rec?rec.url:(/^fig\d+$/.test(ref)?null:ref);
       const label=opt.autonum?`図${figNo}`:"";
       const body=url
         ? `<img src="${url}" alt="${esc(cap)}" data-ref="${esc(ref)}"${w?` style="width:${w}%"`:""}>`
